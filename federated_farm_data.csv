@@ -1,0 +1,11 @@
+farm_id,region,asset_type,soil_moisture,temperature,yield_prediction,credit_score
+FARM1,West Africa,Cassava,32.1,28.7,1580,79
+FARM2,East Africa,Cassava,30.8,27.5,1400,70
+FARM3,West Africa,Maize,28.5,30.2,1350,67
+FARM4,Central Africa,Cassava,33.2,29.1,1620,81
+FARM5,East Africa,Maize,29.9,31.0,1300,65
+FARM6,Southern Africa,Cassava,34.1,30.6,1700,85
+FARM7,West Africa,Sorghum,27.5,32.1,1200,60
+FARM8,East Africa,Cassava,31.2,29.8,1550,77
+FARM9,Central Africa,Sorghum,30.0,31.5,1250,62
+FARM10,Southern Africa,Cassava,33.8,28.9,1650,82
