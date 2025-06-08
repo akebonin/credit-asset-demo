@@ -5,6 +5,9 @@ import datetime
 import plotly.express as px
 from web3 import Web3
 import json
+import os
+INFURA_KEY = os.getenv("INFURA_KEY")
+Web3(Web3.HTTPProvider(f"https://sepolia.infura.io/v3/{INFURA_KEY}"))
 
 st.set_page_config(page_title="Asset-Based Credit Scoring", layout="wide")
 st.title("🌾 Asset-Based Credit Scoring Demo")
@@ -23,8 +26,7 @@ if mode == "🛠 Developer/Test Mode":
     contract_address = st.sidebar.text_input("📬 Contract Address", value=CONTRACT_ADDRESS)
     if rpc_url and contract_address:
         try:
-            w3 = Web3(Web3.HTTPProvider(
-https://sepolia.infura.io/v3/4b0e78b7c0e14213ae40b1e1ca1b3476))
+            Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/" + st.secrets["INFURA_KEY"]))
             contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=ABI)
             st.sidebar.success("Connected to contract ✅")
         except Exception as e:
