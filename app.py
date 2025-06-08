@@ -41,6 +41,24 @@ except Exception as e:
 st.markdown("""
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 <script>
+    window.addEventListener("triggerReleaseAuto", async function(event) {
+        const yieldValue = event.detail;
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract("0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6", [{
+            "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
+            "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"
+        }], signer);
+
+        try {
+            const tx = await contract.releaseFunds(yieldValue);
+            await tx.wait();
+            alert("✅ Transaction successful: " + tx.hash);
+        } catch (err) {
+            alert("❌ Transaction failed: " + err.message);
+        }
+    });
+
     async function connectWallet() {
         if (typeof window.ethereum !== 'undefined') {
             const [account] = await ethereum.request({ method: 'eth_requestAccounts' });
@@ -49,25 +67,6 @@ st.markdown("""
             input.dispatchEvent(new Event('input', { bubbles: true }));
         } else {
             alert("MetaMask not found. Please install it.");
-        }
-    }
-
-    async function triggerRelease() {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract("0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6", [{
-            "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
-            "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"
-        }], signer);
-
-        let val = document.getElementById("yieldInput").value;
-        if (!val || isNaN(val)) return alert("Invalid yield");
-        try {
-            const tx = await contract.releaseFunds(ethers.BigNumber.from(val));
-            await tx.wait();
-            alert("TX Success: " + tx.hash);
-        } catch (err) {
-            alert("TX Error: " + err.message);
         }
     }
 </script>
@@ -99,7 +98,7 @@ with tab1:
     st.subheader("🌾 Yield Predictions")
     st.bar_chart(data.set_index("date")["yield_prediction"])
 
-    avg_yield = data["yield_prediction"].mean()
+    avg_yield = int(data["yield_prediction"].mean())
     credit_score = min(100, max(30, int(avg_yield / 20)))
     st.markdown(f"### 📊 Projected Credit Score: **{credit_score}** / 100")
 
@@ -109,24 +108,32 @@ with tab1:
         st.success("Consent recorded. Logic unlocked.")
 
         if mode == "Simulate":
-            st.markdown("#### 💸 Disbursement Simulation")
-            if st.button("Simulate Fund Disbursement"):
-                st.success("✅ Simulated: Funds released to CBDC-linked wallet")
+            threshold = 1500
+            if avg_yield >= threshold:
+                st.success("✅ Simulated: Yield exceeds threshold. Funds disbursed to CBDC wallet.")
                 st.balloons()
+            else:
+                st.warning("Simulated: Yield does not meet threshold. No disbursement.")
 
         elif mode == "MetaMask (On-chain)":
-            st.markdown("#### 💸 Smart Contract Execution")
             if contract:
                 try:
+                    threshold = contract.functions.yieldThreshold().call()
                     status = contract.functions.getStatus().call()
-                    st.info(f"🧾 Smart Contract Status: **{status}**")
+                    st.info(f"🧾 Smart Contract Status: **{status}**, Threshold: **{threshold}**, Predicted Yield: **{avg_yield}**")
+
+                    if avg_yield >= threshold:
+                        st.success("✅ Conditions met. Triggering on-chain release.")
+                        st.markdown(f"""
+                        <script>
+                            const event = new CustomEvent("triggerReleaseAuto", {{ detail: {avg_yield} }});
+                            window.dispatchEvent(event);
+                        </script>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.warning("Yield does not meet threshold. No on-chain release.")
                 except Exception as e:
                     st.error(f"Status fetch failed: {e}")
-
-            st.markdown("""
-            <input type="text" id="yieldInput" placeholder="Enter Actual Yield" style="margin:5px;padding:5px;width:200px;" />
-            <button onclick="triggerRelease()" style="padding:5px 10px;background:#f44336;color:white;border:none;border-radius:4px;">🚀 Trigger Release</button>
-            """, unsafe_allow_html=True)
 
 with tab2:
     st.header("🌍 Federated Farm Comparison")
