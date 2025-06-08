@@ -53,30 +53,18 @@ st.markdown("""
     }
 
     async function releaseFundsAuto(yieldValue) {
-        if (typeof window.ethereum === 'undefined') {
-            alert("MetaMask not found. Please install it.");
-            return;
-        }
-
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract("0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6", [{
-            "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
-            "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"
-        }], signer);
-
         try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const signer = provider.getSigner();
+            const contract = new ethers.Contract("0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6", [{
+                "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
+                "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"
+            }], signer);
+
             const tx = await contract.releaseFunds(yieldValue);
-            await tx.wait();
-            const msg = "✅ Transaction sent: " + tx.hash;
-            const logBox = document.getElementById("tx_status");
-            if (logBox) logBox.innerText = msg;
-            else alert(msg);
+            document.getElementById("tx_status").innerText = "TX sent: " + tx.hash;
         } catch (err) {
-            const msg = "❌ TX failed: " + err.message;
-            const logBox = document.getElementById("tx_status");
-            if (logBox) logBox.innerText = msg;
-            else alert(msg);
+            document.getElementById("tx_status").innerText = "TX error: " + err.message;
         }
     }
 </script>
@@ -129,7 +117,6 @@ with tab1:
 
                     if avg_yield >= threshold:
                         st.success("✅ Conditions met. Click below to trigger on-chain release.")
-                        tx_button_id = "release_tx_button"
                         st.markdown(f"""
                         <button onclick="releaseFundsAuto({avg_yield})" style="padding: 10px; background-color: #2196F3; color: white; border: none; border-radius: 4px;">🚀 Send releaseFunds({avg_yield})</button>
                         <p id="tx_status" style="margin-top:10px;color:green;"></p>
