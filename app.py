@@ -78,24 +78,25 @@ wallet_address = st.text_input("Wallet Address", key="wallet_address")
 if st.checkbox("👁️ Show Wallet Address") and wallet_address:
     st.success(f"Connected Wallet: `{wallet_address}`")
 
-# === Mode ===
-mode = st.radio("Mode:", ["Simulate", "MetaMask (On-chain)"])
+# === Mode Selection ===
+mode = st.radio("Select Mode:", ["Simulate", "MetaMask (On-chain)"])
 
-# === Tab 1: Farm Monitoring & Simulation ===
-tab1, tab2 = st.tabs(["📈 Farm Monitoring & Credit Score", "🌍 Federated Comparison"])
+# === Data Setup ===
+data = pd.DataFrame({
+    "date": pd.date_range(start="2025-06-01", periods=7),
+    "soil_moisture": [32.5, 33.0, 31.8, 30.2, 29.9, 34.0, 32.1],
+    "temperature": [29.0, 30.1, 28.5, 27.0, 26.7, 30.5, 28.9],
+    "yield_prediction": [1500, 1550, 1400, 1380, 1450, 1600, 1580]
+})
+
+# === Tab Layout ===
+tab1, tab2 = st.tabs(["📈 Farm Monitoring & Disbursement", "🌍 Federated Comparison"])
 
 with tab1:
-    data = pd.DataFrame({
-        "date": pd.date_range(start="2025-06-01", periods=7),
-        "soil_moisture": [32.5, 33.0, 31.8, 30.2, 29.9, 34.0, 32.1],
-        "temperature": [29.0, 30.1, 28.5, 27.0, 26.7, 30.5, 28.9],
-        "yield_prediction": [1500, 1550, 1400, 1380, 1450, 1600, 1580]
-    })
+    st.subheader("📊 Farm Sensor Data Trends")
+    st.line_chart(data.set_index("date")[["soil_moisture", "temperature"]])
 
-    st.subheader("📈 Farm Sensor Data Trends")
-    st.line_chart(data.set_index("date")["soil_moisture"])
-    st.line_chart(data.set_index("date")["temperature"])
-    st.subheader("🌾 Yield Forecasts")
+    st.subheader("🌾 Yield Predictions")
     st.bar_chart(data.set_index("date")["yield_prediction"])
 
     avg_yield = data["yield_prediction"].mean()
@@ -103,28 +104,30 @@ with tab1:
     st.markdown(f"### 📊 Projected Credit Score: **{credit_score}** / 100")
 
     consent = st.checkbox("✅ I agree to share my farm data with the lender.")
+
     if consent:
-        st.success("Consent recorded. Smart contract logic activated.")
+        st.success("Consent recorded. Logic unlocked.")
 
-    if contract:
-        try:
-            status = contract.functions.getStatus().call()
-            st.info(f"🧾 Smart Contract Status: **{status}**")
-        except Exception as e:
-            st.error(f"Failed to fetch status: {e}")
+        if mode == "Simulate":
+            st.markdown("#### 💸 Disbursement Simulation")
+            if st.button("Simulate Fund Disbursement"):
+                st.success("✅ Simulated: Funds released to CBDC-linked wallet")
+                st.balloons()
 
-    st.markdown("#### 💸 Smart Contract Execution")
-    if mode == "MetaMask (On-chain)":
-        st.markdown("""
-        <input type="text" id="yieldInput" placeholder="Enter Actual Yield" style="margin:5px;padding:5px;width:200px;" />
-        <button onclick="triggerRelease()" style="padding:5px 10px;background:#f44336;color:white;border:none;border-radius:4px;">🚀 Trigger Release</button>
-        """, unsafe_allow_html=True)
-    elif mode == "Simulate":
-        if st.button("Simulate Repayment via Smart Contract"):
-            st.success("✅ 25 tokens deducted from CBDC wallet (simulated)")
-            st.balloons()
+        elif mode == "MetaMask (On-chain)":
+            st.markdown("#### 💸 Smart Contract Execution")
+            if contract:
+                try:
+                    status = contract.functions.getStatus().call()
+                    st.info(f"🧾 Smart Contract Status: **{status}**")
+                except Exception as e:
+                    st.error(f"Status fetch failed: {e}")
 
-# === Tab 2: Federated View ===
+            st.markdown("""
+            <input type="text" id="yieldInput" placeholder="Enter Actual Yield" style="margin:5px;padding:5px;width:200px;" />
+            <button onclick="triggerRelease()" style="padding:5px 10px;background:#f44336;color:white;border:none;border-radius:4px;">🚀 Trigger Release</button>
+            """, unsafe_allow_html=True)
+
 with tab2:
     st.header("🌍 Federated Farm Comparison")
     try:
