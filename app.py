@@ -23,7 +23,8 @@ if mode == "🛠 Developer/Test Mode":
     contract_address = st.sidebar.text_input("📬 Contract Address", value=CONTRACT_ADDRESS)
     if rpc_url and contract_address:
         try:
-            w3 = Web3(Web3.HTTPProvider(rpc_url))
+            w3 = Web3(Web3.HTTPProvider(
+https://sepolia.infura.io/v3/4b0e78b7c0e14213ae40b1e1ca1b3476))
             contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=ABI)
             st.sidebar.success("Connected to contract ✅")
         except Exception as e:
