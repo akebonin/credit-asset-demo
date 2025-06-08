@@ -4,16 +4,22 @@ import datetime
 import plotly.express as px
 from web3 import Web3
 import json
-import os
-INFURA_KEY = os.getenv("INFURA_KEY")
-Web3(Web3.HTTPProvider(f"https://sepolia.infura.io/v3/{INFURA_KEY}"))
 
 st.set_page_config(page_title="Asset-Based Credit Scoring", layout="wide")
 st.title("🌾 Asset-Based Credit Scoring Demo")
 
 # === CONFIG ===
-CONTRACT_ADDRESS = "0x35750342f1A55E8F6B799E3cD1129d6e4Df7c3B5"  # default, editable in Dev mode
-ABI = [{"inputs": [{"internalType": "address", "name": "_borrower", "type": "address"}, {"internalType": "uint256", "name": "_yieldThreshold", "type": "uint256"}], "stateMutability": "payable", "type": "constructor"}, {"inputs": [], "name": "amount", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "borrower", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "disbursed", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "getStatus", "outputs": [{"internalType": "string", "name": "", "type": "string"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "lender", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}], "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [], "name": "yieldThreshold", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}]  # inserted as Python dict
+CONTRACT_ADDRESS = "0x35750342f1A55E8F6B799E3cD1129d6e4Df7c3B5"
+ABI = [
+    {"inputs": [{"internalType": "address", "name": "_borrower", "type": "address"}, {"internalType": "uint256", "name": "_yieldThreshold", "type": "uint256"}], "stateMutability": "payable", "type": "constructor"},
+    {"inputs": [], "name": "amount", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "borrower", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "disbursed", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "getStatus", "outputs": [{"internalType": "string", "name": "", "type": "string"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "lender", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}], "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
+    {"inputs": [], "name": "yieldThreshold", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}
+]
 
 # === MODE SELECTOR ===
 mode = st.sidebar.radio("Choose Mode:", ["🔍 Public Viewer Mode", "🛠 Developer/Test Mode"])
@@ -28,13 +34,13 @@ try:
         rpc_url = f"https://sepolia.infura.io/v3/{st.secrets['INFURA_KEY']}"
         contract_address = CONTRACT_ADDRESS
 
-    
+    w3 = Web3(Web3.HTTPProvider(rpc_url))
     contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=ABI)
     st.sidebar.success("Connected to contract ✅")
 except Exception as e:
     st.sidebar.error(f"Contract connection failed: {e}")
     contract = None
-    
+
 # === TAB SETUP ===
 tab1, tab2 = st.tabs(["📈 Farm Monitoring & Credit Score", "🌍 Federated Comparison"])
 
@@ -47,7 +53,6 @@ with tab1:
         "yield_prediction": [1500, 1550, 1400, 1380, 1450, 1600, 1580]
     })
 
-    # Plot data
     st.subheader("📊 Sensor Trends")
     st.line_chart(farm_data.set_index("date")[["soil_moisture", "temperature"]])
     st.subheader("🌾 Yield Forecasts")
@@ -57,7 +62,6 @@ with tab1:
     credit_score = min(100, max(30, int(avg_yield / 20)))
     st.markdown(f"### 💳 Projected Credit Score: **{credit_score}** / 100")
 
-    # Consent toggle
     consent = st.checkbox("✅ I agree to share my farm data with the lender.")
 
     if contract:
