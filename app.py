@@ -161,31 +161,3 @@ with tab2:
 
 st.markdown("---")
 st.caption("Prototype demo for G20 TechSprint 2025 | Built by Alis Grave Nil")
-
-
-✅ Done. The app now:
-
-Only shows a 🚀 Send releaseFunds(...) button if:
-
-Consent is given
-
-Predicted yield ≥ threshold
-
-
-Triggers MetaMask directly on click
-
-Displays the transaction hash or error live in the UI
-
-
-You can now visually confirm on-chain release execution through MetaMask and verify the success.
-
-Let me know if you want to:
-
-Show transaction hash as a clickable Etherscan link
-
-Log transaction history
-
-Trigger status refresh after TX confirmation
-
-
-Ready to iterate.
