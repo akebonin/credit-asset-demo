@@ -81,12 +81,7 @@ if st.checkbox("👁️ Show Wallet Address") and wallet_address:
 mode = st.radio("Select Mode:", ["Simulate", "MetaMask (On-chain)"])
 
 # === Data Setup ===
-data = pd.DataFrame({
-    "date": pd.date_range(start="2025-06-01", periods=7),
-    "soil_moisture": [32.5, 33.0, 31.8, 30.2, 29.9, 34.0, 32.1],
-    "temperature": [29.0, 30.1, 28.5, 27.0, 26.7, 30.5, 28.9],
-    "yield_prediction": [1500, 1550, 1400, 1380, 1450, 1600, 1580]
-})
+data = pd.read_csv("cassava_farm_data.csv")
 
 # === Tab Layout ===
 tab1, tab2 = st.tabs(["📈 Farm Monitoring & Disbursement", "🌍 Federated Comparison"])
