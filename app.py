@@ -2,71 +2,37 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from web3 import Web3
+import json
+import os
 
-# === SETUP ===
 st.set_page_config(page_title="Asset-Based Credit Scoring", layout="wide")
 st.title("🌾 Asset-Based Credit Scoring Demo")
 
-# === INFURA + CONTRACT ===
+# === CONFIG ===
+CONTRACT_ADDRESS = "0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6"  # your deployed address
+ABI = [...]  # full ABI here, same as already used
+
+# === WEB3 SETUP ===
 INFURA_KEY = st.secrets["INFURA_KEY"]
-CONTRACT_ADDRESS = "0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6"  # Replace if redeployed
+RPC_URL = f"https://sepolia.infura.io/v3/{INFURA_KEY}"
+w3 = Web3(Web3.HTTPProvider(RPC_URL))
+contract = w3.eth.contract(address=Web3.to_checksum_address(CONTRACT_ADDRESS), abi=ABI)
 
-ABI = [
-    {
-        "inputs": [
-            {"internalType": "address", "name": "_borrower", "type": "address"},
-            {"internalType": "uint256", "name": "_yieldThreshold", "type": "uint256"}
-        ],
-        "stateMutability": "payable",
-        "type": "constructor"
-    },
-    {"inputs": [], "name": "amount", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
-    {"inputs": [], "name": "borrower", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
-    {"inputs": [], "name": "disbursed", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "view", "type": "function"},
-    {"inputs": [], "name": "getStatus", "outputs": [{"internalType": "string", "name": "", "type": "string"}], "stateMutability": "view", "type": "function"},
-    {"inputs": [], "name": "lender", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
-    {"inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}], "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
-    {"inputs": [], "name": "yieldThreshold", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}
-]
+# === SIDEBAR MODE ===
+mode = st.sidebar.radio("Choose Mode:", ["🔍 Viewer", "🛠 Developer"])
 
-# === MODE SELECTOR ===
-mode = st.sidebar.radio("Choose Mode:", ["🔍 Public Viewer Mode", "🛠 Developer/Test Mode"])
-st.sidebar.markdown("---")
+# === TABS ===
+tab1, tab2 = st.tabs(["📈 Credit Score Dashboard", "🌍 Federated Comparison"])
 
-# === CONNECTION ===
-try:
-    if mode == "🛠 Developer/Test Mode":
-        rpc_url = st.sidebar.text_input("🔗 RPC URL", f"https://sepolia.infura.io/v3/{INFURA_KEY}")
-        contract_address = st.sidebar.text_input("📬 Contract Address", value=CONTRACT_ADDRESS)
-    else:
-        rpc_url = f"https://sepolia.infura.io/v3/{INFURA_KEY}"
-        contract_address = CONTRACT_ADDRESS
-
-    w3 = Web3(Web3.HTTPProvider(rpc_url))
-    contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=ABI)
-    st.sidebar.success("Connected to contract ✅")
-except Exception as e:
-    st.sidebar.error(f"Contract connection failed: {e}")
-    contract = None
-
-# === TAB SETUP ===
-tab1, tab2 = st.tabs(["📈 Farm Monitoring & Credit Score", "🌍 Federated Comparison"])
-
-# === TAB 1: FARM MONITORING ===
 with tab1:
-    st.header("📈 Farm Monitoring Dashboard")
-
+    st.header("📊 Farm Monitoring")
     farm_data = pd.DataFrame({
         "date": pd.date_range(start="2025-06-01", periods=7),
         "soil_moisture": [32.5, 33.0, 31.8, 30.2, 29.9, 34.0, 32.1],
         "temperature": [29.0, 30.1, 28.5, 27.0, 26.7, 30.5, 28.9],
         "yield_prediction": [1500, 1550, 1400, 1380, 1450, 1600, 1580]
     })
-
-    st.subheader("📊 Sensor Trends")
     st.line_chart(farm_data.set_index("date")[["soil_moisture", "temperature"]])
-
-    st.subheader("🌾 Yield Forecasts")
     st.bar_chart(farm_data.set_index("date")["yield_prediction"])
 
     avg_yield = farm_data["yield_prediction"].mean()
@@ -79,42 +45,30 @@ with tab1:
         st.subheader("🔗 Smart Contract Status")
         try:
             status = contract.functions.getStatus().call()
-            st.info(f"🧾 Smart Contract Status: **{status}**")
+            st.info(f"📄 Status: **{status}**")
         except Exception as e:
-            st.error(f"Failed to fetch status: {e}")
+            st.error(f"❌ Failed to fetch status: {e}")
 
-        if mode == "🛠 Developer/Test Mode" and consent:
-            st.markdown("#### 💸 Release Funds (test only)")
-            if st.button("Trigger releaseFunds()"):
-                st.warning("On-chain interaction not implemented in demo.")
+        if mode == "🛠 Developer" and consent:
+            st.markdown("#### 💸 Trigger releaseFunds (not connected to wallet in demo)")
+            if st.button("Execute releaseFunds()"):
+                st.warning("Metamask integration not wired in frontend logic yet.")
 
-# === TAB 2: FEDERATED VIEW ===
 with tab2:
-    st.header("🌍 Federated Farm Comparison")
+    st.header("🌍 Federated Comparison")
     try:
         df = pd.read_csv("federated_farm_data.csv")
-
         st.sidebar.header("🔍 Filter Farms")
-        regions = st.sidebar.multiselect("Select Region(s):", options=df["region"].unique(), default=df["region"].unique())
-        asset_types = st.sidebar.multiselect("Select Asset Type(s):", options=df["asset_type"].unique(), default=df["asset_type"].unique())
-
+        regions = st.sidebar.multiselect("Regions:", df["region"].unique(), default=df["region"].unique())
+        asset_types = st.sidebar.multiselect("Assets:", df["asset_type"].unique(), default=df["asset_type"].unique())
         filtered_df = df[(df["region"].isin(regions)) & (df["asset_type"].isin(asset_types))]
-
-        st.subheader("📋 Filtered Farms Overview")
         st.dataframe(filtered_df)
-
-        st.subheader("📊 Yield Prediction vs Credit Score")
-        fig1 = px.scatter(filtered_df, x="yield_prediction", y="credit_score",
-                          color="region", size="soil_moisture", hover_data=["farm_id", "asset_type"])
+        fig1 = px.scatter(filtered_df, x="yield_prediction", y="credit_score", color="region", size="soil_moisture")
         st.plotly_chart(fig1, use_container_width=True)
-
-        st.subheader("🌾 Average Metrics by Asset Type")
         grouped = filtered_df.groupby("asset_type")[["soil_moisture", "temperature", "yield_prediction", "credit_score"]].mean().reset_index()
         fig2 = px.bar(grouped, x="asset_type", y=["soil_moisture", "temperature", "yield_prediction", "credit_score"], barmode="group")
         st.plotly_chart(fig2, use_container_width=True)
-
     except Exception as e:
-        st.error(f"Failed to load federated data: {e}")
+        st.error(f"❌ Federated data error: {e}")
 
-# === FOOTER ===
 st.caption("Integrated demo for G20 TechSprint 2025 | Built by Alis Grave Nil")
