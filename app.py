@@ -81,43 +81,69 @@ if st.checkbox("👁️ Show Wallet Address") and wallet_address:
 # === Mode ===
 mode = st.radio("Mode:", ["Simulate", "MetaMask (On-chain)"])
 
-# === Data ===
-data = pd.DataFrame({
-    "date": pd.date_range(start="2025-06-01", periods=7),
-    "soil_moisture": [32.5, 33.0, 31.8, 30.2, 29.9, 34.0, 32.1],
-    "temperature": [29.0, 30.1, 28.5, 27.0, 26.7, 30.5, 28.9],
-    "yield_prediction": [1500, 1550, 1400, 1380, 1450, 1600, 1580]
-})
+# === Tab 1: Farm Monitoring & Simulation ===
+tab1, tab2 = st.tabs(["📈 Farm Monitoring & Credit Score", "🌍 Federated Comparison"])
 
-# === Charts ===
-st.subheader("📈 Farm Sensor Data")
-st.line_chart(data.set_index("date")[["soil_moisture", "temperature"]])
-st.subheader("🌾 Yield Predictions")
-st.bar_chart(data.set_index("date")["yield_prediction"])
+with tab1:
+    data = pd.DataFrame({
+        "date": pd.date_range(start="2025-06-01", periods=7),
+        "soil_moisture": [32.5, 33.0, 31.8, 30.2, 29.9, 34.0, 32.1],
+        "temperature": [29.0, 30.1, 28.5, 27.0, 26.7, 30.5, 28.9],
+        "yield_prediction": [1500, 1550, 1400, 1380, 1450, 1600, 1580]
+    })
 
-# === Credit Score Logic ===
-avg_yield = data["yield_prediction"].mean()
-credit_score = min(100, max(30, int(avg_yield / 20)))
-st.markdown(f"### 📊 Projected Credit Score: **{credit_score}** / 100")
+    st.subheader("📈 Farm Sensor Data Trends")
+    st.line_chart(data.set_index("date")["soil_moisture"])
+    st.line_chart(data.set_index("date")["temperature"])
+    st.subheader("🌾 Yield Forecasts")
+    st.bar_chart(data.set_index("date")["yield_prediction"])
 
-# === Consent ===
-st.markdown("#### ✅ Data Sharing Consent")
-consent = st.checkbox("I agree to share my farm data with the lender.")
-if consent:
-    st.success("Consent recorded. Smart contract logic activated.")
+    avg_yield = data["yield_prediction"].mean()
+    credit_score = min(100, max(30, int(avg_yield / 20)))
+    st.markdown(f"### 📊 Projected Credit Score: **{credit_score}** / 100")
 
-# === Smart Contract Interaction ===
-st.markdown("#### 💸 Smart Contract Execution")
-if contract and mode == "MetaMask (On-chain)":
-    st.markdown("""
-    <input type="text" id="yieldInput" placeholder="Enter Actual Yield" style="margin:5px;padding:5px;width:200px;" />
-    <button onclick="triggerRelease()" style="padding:5px 10px;background:#f44336;color:white;border:none;border-radius:4px;">🚀 Trigger Release</button>
-    """, unsafe_allow_html=True)
-elif mode == "Simulate":
-    if st.button("Simulate Repayment via Smart Contract"):
-        st.success("✅ 25 tokens deducted from CBDC wallet (simulated)")
-        st.balloons()
+    consent = st.checkbox("✅ I agree to share my farm data with the lender.")
+    if consent:
+        st.success("Consent recorded. Smart contract logic activated.")
 
-# === Footer ===
+    if contract:
+        try:
+            status = contract.functions.getStatus().call()
+            st.info(f"🧾 Smart Contract Status: **{status}**")
+        except Exception as e:
+            st.error(f"Failed to fetch status: {e}")
+
+    st.markdown("#### 💸 Smart Contract Execution")
+    if mode == "MetaMask (On-chain)":
+        st.markdown("""
+        <input type="text" id="yieldInput" placeholder="Enter Actual Yield" style="margin:5px;padding:5px;width:200px;" />
+        <button onclick="triggerRelease()" style="padding:5px 10px;background:#f44336;color:white;border:none;border-radius:4px;">🚀 Trigger Release</button>
+        """, unsafe_allow_html=True)
+    elif mode == "Simulate":
+        if st.button("Simulate Repayment via Smart Contract"):
+            st.success("✅ 25 tokens deducted from CBDC wallet (simulated)")
+            st.balloons()
+
+# === Tab 2: Federated View ===
+with tab2:
+    st.header("🌍 Federated Farm Comparison")
+    try:
+        df = pd.read_csv("federated_farm_data.csv")
+        st.sidebar.header("🔍 Filter Farms")
+        regions = st.sidebar.multiselect("Select Region(s):", options=df["region"].unique(), default=df["region"].unique())
+        asset_types = st.sidebar.multiselect("Select Asset Type(s):", options=df["asset_type"].unique(), default=df["asset_type"].unique())
+        filtered_df = df[(df["region"].isin(regions)) & (df["asset_type"].isin(asset_types))]
+        st.subheader("📋 Filtered Farms Overview")
+        st.dataframe(filtered_df)
+        st.subheader("📊 Yield Prediction vs Credit Score")
+        fig1 = px.scatter(filtered_df, x="yield_prediction", y="credit_score", color="region", size="soil_moisture", hover_data=["farm_id", "asset_type"])
+        st.plotly_chart(fig1, use_container_width=True)
+        st.subheader("🌾 Average Metrics by Asset Type")
+        grouped = filtered_df.groupby("asset_type")[["soil_moisture", "temperature", "yield_prediction", "credit_score"]].mean().reset_index()
+        fig2 = px.bar(grouped, x="asset_type", y=["soil_moisture", "temperature", "yield_prediction", "credit_score"], barmode="group")
+        st.plotly_chart(fig2, use_container_width=True)
+    except Exception as e:
+        st.error(f"Failed to load or process federated data: {e}")
+
 st.markdown("---")
 st.caption("Prototype demo for G20 TechSprint 2025 | Built by Alis Grave Nil")
