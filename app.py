@@ -2,20 +2,13 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from web3 import Web3
-import json
 
-# === STREAMLIT CONFIG ===
 st.set_page_config(page_title="Asset-Based Credit Scoring", layout="wide")
 st.title("🌾 Asset-Based Credit Scoring Demo")
 
-# === INFURA CONNECTION ===
-INFURA_KEY = st.secrets["INFURA_KEY"]
-rpc_url = f"https://sepolia.infura.io/v3/{INFURA_KEY}"
-w3 = Web3(Web3.HTTPProvider(rpc_url))
-
-# === CONTRACT SETUP ===
-CONTRACT_ADDRESS = "0x35750342f1A55E8F6B799E3cD1129d6e4Df7c3B5"
-
+# === Blockchain config ===
+INFURA_URL = f"https://sepolia.infura.io/v3/{st.secrets['INFURA_KEY']}"
+CONTRACT_ADDRESS = "0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6"
 ABI = [
     {"inputs": [{"internalType": "address", "name": "_borrower", "type": "address"},
                 {"internalType": "uint256", "name": "_yieldThreshold", "type": "uint256"}],
@@ -36,24 +29,14 @@ ABI = [
      "stateMutability": "view", "type": "function"}
 ]
 
-# === MODE SWITCH ===
-mode = st.sidebar.radio("Choose Mode:", ["🔍 Public Viewer Mode", "🛠 Developer/Test Mode"])
-st.sidebar.markdown("---")
-
-if mode == "🛠 Developer/Test Mode":
-    custom_rpc = st.sidebar.text_input("🔗 Custom RPC", value=rpc_url)
-    custom_contract = st.sidebar.text_input("📬 Contract Address", value=CONTRACT_ADDRESS)
-    try:
-        w3 = Web3(Web3.HTTPProvider(custom_rpc))
-        contract = w3.eth.contract(address=Web3.to_checksum_address(custom_contract), abi=ABI)
-        st.sidebar.success("Connected to contract ✅")
-    except Exception as e:
-        st.sidebar.error(f"Connection failed: {e}")
-        contract = None
-else:
+try:
+    w3 = Web3(Web3.HTTPProvider(INFURA_URL))
     contract = w3.eth.contract(address=Web3.to_checksum_address(CONTRACT_ADDRESS), abi=ABI)
+except Exception as e:
+    contract = None
+    st.error(f"❌ Web3 initialization failed: {e}")
 
-# === TABS ===
+# === UI ===
 tab1, tab2 = st.tabs(["📈 Farm Monitoring & Credit Score", "🌍 Federated Comparison"])
 
 with tab1:
@@ -67,7 +50,6 @@ with tab1:
 
     st.subheader("📊 Sensor Trends")
     st.line_chart(farm_data.set_index("date")[["soil_moisture", "temperature"]])
-
     st.subheader("🌾 Yield Forecasts")
     st.bar_chart(farm_data.set_index("date")["yield_prediction"])
 
@@ -77,18 +59,15 @@ with tab1:
 
     consent = st.checkbox("✅ I agree to share my farm data with the lender.")
 
+    st.subheader("🔗 Smart Contract Status")
     if contract:
-        st.subheader("🔗 Smart Contract Status")
         try:
             status = contract.functions.getStatus().call()
             st.info(f"🧾 Smart Contract Status: **{status}**")
         except Exception as e:
             st.error(f"Failed to fetch status: {e}")
-
-        if mode == "🛠 Developer/Test Mode" and consent:
-            st.markdown("#### 💸 Release Funds")
-            if st.button("Trigger releaseFunds()"):
-                st.warning("⚠️ Wallet interaction not implemented in Streamlit — use Web UI like Remix or WalletConnect.")
+    else:
+        st.error("⚠️ Smart contract not initialized.")
 
 with tab2:
     st.header("🌍 Federated Farm Comparison")
@@ -108,6 +87,6 @@ with tab2:
         fig2 = px.bar(grouped, x="asset_type", y=["soil_moisture", "temperature", "yield_prediction", "credit_score"], barmode="group")
         st.plotly_chart(fig2, use_container_width=True)
     except Exception as e:
-        st.error(f"Failed to load federated data: {e}")
+        st.error(f"Failed to load or process federated data: {e}")
 
 st.caption("G20 TechSprint 2025 Prototype | Built by Alis Grave Nil")
