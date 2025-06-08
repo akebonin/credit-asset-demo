@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import datetime
@@ -29,7 +28,7 @@ try:
         rpc_url = f"https://sepolia.infura.io/v3/{st.secrets['INFURA_KEY']}"
         contract_address = CONTRACT_ADDRESS
 
-    w3 = Web3(Web3.HTTPProvider(rpc_url))
+    
     contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=ABI)
     st.sidebar.success("Connected to contract ✅")
 except Exception as e:
