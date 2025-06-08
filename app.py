@@ -21,24 +21,21 @@ mode = st.sidebar.radio("Choose Mode:", ["🔍 Public Viewer Mode", "🛠 Develo
 st.sidebar.markdown("---")
 
 # === CONTRACT SETUP ===
-if mode == "🛠 Developer/Test Mode":
-    rpc_url = st.sidebar.text_input("🔗 RPC URL", value="https://sepolia.infura.io/v3/YOUR_PROJECT_ID")
-    contract_address = st.sidebar.text_input("📬 Contract Address", value=CONTRACT_ADDRESS)
-    if rpc_url and contract_address:
-        try:
-            Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/" + st.secrets["INFURA_KEY"]))
-            contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=ABI)
-            st.sidebar.success("Connected to contract ✅")
-        except Exception as e:
-            st.sidebar.error(f"Connection failed: {e}")
-            contract = None
+try:
+    if mode == "🛠 Developer/Test Mode":
+        rpc_url = st.sidebar.text_input("🔗 RPC URL", value=f"https://sepolia.infura.io/v3/{st.secrets['INFURA_KEY']}")
+        contract_address = st.sidebar.text_input("📬 Contract Address", value=CONTRACT_ADDRESS)
     else:
-        contract = None
-else:
-    # Viewer mode uses pre-filled address and read-only Infura
-    w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/" + st.secrets["INFURA_KEY"]))
-    contract = w3.eth.contract(address=Web3.to_checksum_address(CONTRACT_ADDRESS), abi=ABI)
+        rpc_url = f"https://sepolia.infura.io/v3/{st.secrets['INFURA_KEY']}"
+        contract_address = CONTRACT_ADDRESS
 
+    w3 = Web3(Web3.HTTPProvider(rpc_url))
+    contract = w3.eth.contract(address=Web3.to_checksum_address(contract_address), abi=ABI)
+    st.sidebar.success("Connected to contract ✅")
+except Exception as e:
+    st.sidebar.error(f"Contract connection failed: {e}")
+    contract = None
+    
 # === TAB SETUP ===
 tab1, tab2 = st.tabs(["📈 Farm Monitoring & Credit Score", "🌍 Federated Comparison"])
 
