@@ -80,9 +80,8 @@ with tab1:
             if avg_yield >= threshold:
                 st.success("✅ Conditions met. Click below to trigger on-chain release.")
 
-                tx_url = f"https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield}"
-                st.markdown(f"""
-                    <a href="{tx_url}" target="_self" style="
+                st.markdown("""
+                    <a href="https://credit-asset-demo.streamlit.app/public/redirect.html" target="_self" style="
                         display: inline-block;
                         padding: 10px 20px;
                         background-color: #2081e2;
