@@ -27,7 +27,8 @@ ABI = [
     {"inputs": [], "name": "lender", "outputs": [{"internalType": "address", "name": "", "type": "address"}],
      "stateMutability": "view", "type": "function"},
     {"inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
-     "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
+     "name": "releaseFunds", "outputs": [],
+     "stateMutability": "nonpayable", "type": "function"},
     {"inputs": [], "name": "yieldThreshold", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
      "stateMutability": "view", "type": "function"}
 ]
@@ -102,9 +103,10 @@ with tab1:
                             return tx.hash;
                         }}
                         """
-                        tx_hash = streamlit_js_eval(js_expressions=js_code, key="release_funds", debounce=0)
-                        if tx_hash:
-                            st.success(f"✅ TX sent: {tx_hash}")
+                        if st.button("🚀 Send releaseFunds transaction"):
+                            tx_hash = streamlit_js_eval(js_expressions=js_code, key="release_funds", debounce=0)
+                            if tx_hash:
+                                st.success(f"✅ TX sent: {tx_hash}")
                     else:
                         st.warning("Yield does not meet threshold. No on-chain release.")
                 except Exception as e:
