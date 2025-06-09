@@ -94,7 +94,7 @@ with tab1:
                             "type": "function"
                         }]
                         js_code = f"""
-                        async () => {{
+                        (async () => {{
                             if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') throw new Error('MetaMask not found');
                             if (typeof ethers === 'undefined') {{
                                 await new Promise((resolve, reject) => {{
@@ -111,7 +111,7 @@ with tab1:
                             const contract = new ethers.Contract('{CONTRACT_ADDRESS}', abi, signer);
                             const tx = await contract.releaseFunds({avg_yield});
                             return tx.hash;
-                        }}
+                        }})()
                         """
                         if st.button("🚀 Send releaseFunds transaction"):
                             try:
