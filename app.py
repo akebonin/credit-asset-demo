@@ -80,7 +80,7 @@ with tab1:
             if avg_yield >= threshold:
                 st.success("✅ Conditions met. Click below to trigger on-chain release.")
 
-                # ⬇ Update this URL with your actual PythonAnywhere username
+                
                 redirect_url = f"https://debm.pythonanywhere.com/trigger?yield={avg_yield}"
 
                 st.markdown(f"""
