@@ -97,12 +97,23 @@ with tab1:
                         }]
 
                         html_template = """
-                        <script src='https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js'></script>
-                        <button onclick="runTX()" style="padding: 10px; background-color: #d62828; color: white; border: none; border-radius: 5px;">🚀 Send releaseFunds(YIELD)</button>
+                        <script>
+                        const loadEthers = async () => {
+                          if (typeof window.ethers === 'undefined') {
+                            const script = document.createElement('script');
+                            script.src = 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js';
+                            script.onload = runTX;
+                            document.head.appendChild(script);
+                          } else {
+                            runTX();
+                          }
+                        };
+                        </script>
+                        <button onclick="loadEthers()" style="padding: 10px; background-color: #d62828; color: white; border: none; border-radius: 5px;">🚀 Send releaseFunds(YIELD)</button>
                         <p id="result" style="margin-top: 10px; font-family: monospace;"></p>
                         <script>
-                        async function runTX() {{
-                          try {{
+                        async function runTX() {
+                          try {
                             if (typeof window.ethereum === 'undefined') throw new Error('MetaMask not available');
                             const provider = new ethers.providers.Web3Provider(window.ethereum);
                             const signer = provider.getSigner();
@@ -110,14 +121,14 @@ with tab1:
                             const contract = new ethers.Contract('{CONTRACT_ADDRESS}', abi, signer);
                             const tx = await contract.releaseFunds(YIELD);
                             document.getElementById("result").innerText = "✅ TX sent: " + tx.hash;
-                          }} catch(err) {{
+                          } catch(err) {
                             document.getElementById("result").innerText = "❌ " + err.message;
-                          }}
-                        }}
+                          }
+                        }
                         </script>
                         """
                         html = html_template.replace("ABI_JSON", json.dumps(abi_snippet)).replace("YIELD", str(avg_yield))
-                        components.html(html, height=150)
+                        components.html(html, height=180)
                     else:
                         st.warning("Yield does not meet threshold. No on-chain release.")
                 except Exception as e:
