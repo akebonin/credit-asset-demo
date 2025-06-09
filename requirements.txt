@@ -3,4 +3,3 @@ pandas
 plotly
 web3
 streamlit-js-eval
-json
