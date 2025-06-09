@@ -88,9 +88,17 @@ with tab1:
                     if avg_yield >= threshold:
                         st.success("✅ Conditions met. Click below to trigger on-chain release.")
 
-                        html = f"""
+                        abi_snippet = [{
+                            "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
+                            "name": "releaseFunds",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        }]
+
+                        html_template = """
                         <script src='https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js'></script>
-                        <button onclick="runTX()" style="padding: 10px; background-color: #d62828; color: white; border: none; border-radius: 5px;">🚀 Send releaseFunds({avg_yield})</button>
+                        <button onclick="runTX()" style="padding: 10px; background-color: #d62828; color: white; border: none; border-radius: 5px;">🚀 Send releaseFunds(YIELD)</button>
                         <p id="result" style="margin-top: 10px; font-family: monospace;"></p>
                         <script>
                         async function runTX() {{
@@ -98,15 +106,9 @@ with tab1:
                             if (typeof window.ethereum === 'undefined') throw new Error('MetaMask not available');
                             const provider = new ethers.providers.Web3Provider(window.ethereum);
                             const signer = provider.getSigner();
-                            const abi = [{
-                              "inputs": [{{"internalType": "uint256", "name": "actualYield", "type": "uint256"}}],
-                              "name": "releaseFunds",
-                              "outputs": [],
-                              "stateMutability": "nonpayable",
-                              "type": "function"
-                            }];
+                            const abi = ABI_JSON;
                             const contract = new ethers.Contract('{CONTRACT_ADDRESS}', abi, signer);
-                            const tx = await contract.releaseFunds({avg_yield});
+                            const tx = await contract.releaseFunds(YIELD);
                             document.getElementById("result").innerText = "✅ TX sent: " + tx.hash;
                           }} catch(err) {{
                             document.getElementById("result").innerText = "❌ " + err.message;
@@ -114,6 +116,7 @@ with tab1:
                         }}
                         </script>
                         """
+                        html = html_template.replace("ABI_JSON", json.dumps(abi_snippet)).replace("YIELD", str(avg_yield))
                         components.html(html, height=150)
                     else:
                         st.warning("Yield does not meet threshold. No on-chain release.")
