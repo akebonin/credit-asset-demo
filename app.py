@@ -82,8 +82,8 @@ with tab1:
                 try:
                     threshold = contract.functions.yieldThreshold().call()
                     status = contract.functions.getStatus().call()
-                    st.info("🧾 Smart Contract Status: {}".format(status))
-                    st.info(f"Threshold: {threshold}, Predicted Yield: {avg_yield}")
+                    st.markdown("🧾 Smart Contract Status: " + str(status))
+                    st.info("Threshold: " + str(threshold) + ", Predicted Yield: " + str(avg_yield))
 
                     if avg_yield >= threshold:
                         st.success("✅ Conditions met. Click below to trigger on-chain release.")
