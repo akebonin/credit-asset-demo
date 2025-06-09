@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from web3 import Web3
+from streamlit_js_eval import streamlit_js_eval
 
 # === CONFIG ===
 st.set_page_config(page_title="Asset-Based Credit Score", layout="wide")
@@ -36,40 +37,6 @@ try:
 except Exception as e:
     contract = None
     st.error(f"❌ Web3 initialization failed: {e}")
-
-# === Wallet Connect + Trigger Button JS ===
-st.markdown("""
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-<script>
-    async function connectWallet() {
-        if (typeof window.ethereum !== 'undefined') {
-            const [account] = await ethereum.request({ method: 'eth_requestAccounts' });
-            const input = document.getElementById("wallet_address");
-            input.value = account;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-        } else {
-            alert("MetaMask not found. Please install it.");
-        }
-    }
-
-    async function releaseFundsAuto(yieldValue) {
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const contract = new ethers.Contract("0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6", [{
-                "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
-                "name": "releaseFunds", "outputs": [], "stateMutability": "nonpayable", "type": "function"
-            }], signer);
-
-            const tx = await contract.releaseFunds(yieldValue);
-            document.getElementById("tx_status").innerText = "TX sent: " + tx.hash;
-        } catch (err) {
-            document.getElementById("tx_status").innerText = "TX error: " + err.message;
-        }
-    }
-</script>
-<button onclick="connectWallet()" style="margin:10px;padding:10px 15px;background:#4CAF50;color:white;border:none;border-radius:5px;">🔗 Connect Wallet</button>
-""", unsafe_allow_html=True)
 
 wallet_address = st.text_input("Wallet Address", key="wallet_address")
 if st.checkbox("👁️ Show Wallet Address") and wallet_address:
@@ -117,10 +84,25 @@ with tab1:
 
                     if avg_yield >= threshold:
                         st.success("✅ Conditions met. Click below to trigger on-chain release.")
-                        st.markdown(f"""
-                        <button onclick="releaseFundsAuto({avg_yield})" style="padding: 10px; background-color: #2196F3; color: white; border: none; border-radius: 4px;">🚀 Send releaseFunds({avg_yield})</button>
-                        <p id="tx_status" style="margin-top:10px;color:green;"></p>
-                        """, unsafe_allow_html=True)
+                        js_code = f"""
+                        async () => {{
+                            if (typeof window.ethereum === 'undefined') throw new Error('MetaMask not found');
+                            const provider = new ethers.providers.Web3Provider(window.ethereum);
+                            const signer = provider.getSigner();
+                            const contract = new ethers.Contract('{CONTRACT_ADDRESS}', [{
+                                "inputs": [{{"internalType": "uint256", "name": "actualYield", "type": "uint256"}}],
+                                "name": "releaseFunds",
+                                "outputs": [],
+                                "stateMutability": "nonpayable",
+                                "type": "function"
+                            }], signer);
+                            const tx = await contract.releaseFunds({avg_yield});
+                            return tx.hash;
+                        }}
+                        """
+                        tx_hash = streamlit_js_eval(js_expressions=js_code, key="release_funds", debounce=0)
+                        if tx_hash:
+                            st.success(f"✅ TX sent: {tx_hash}")
                     else:
                         st.warning("Yield does not meet threshold. No on-chain release.")
                 except Exception as e:
