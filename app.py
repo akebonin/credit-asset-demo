@@ -79,9 +79,8 @@ with tab1:
         elif mode == "MetaMask (On-chain)":
             if avg_yield >= threshold:
                 st.success("✅ Conditions met. Click below to trigger on-chain release.")
-
                 st.markdown("""
-                    <a href="https://credit-asset-demo.streamlit.app/public/redirect.html" target="_self" style="
+                    <a href="https://akebonin.github.io/credit-asset-demo/redirect.html" target="_self" style="
                         display: inline-block;
                         padding: 10px 20px;
                         background-color: #2081e2;
