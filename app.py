@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from web3 import Web3
 import streamlit.components.v1 as components
+import json
 
 # === CONFIG ===
 st.set_page_config(page_title="Asset-Based Credit Score", layout="wide")
@@ -81,7 +82,8 @@ with tab1:
                 try:
                     threshold = contract.functions.yieldThreshold().call()
                     status = contract.functions.getStatus().call()
-                    st.info(f"🧾 Smart Contract Status: **{status}**, Threshold: **{threshold}**, Predicted Yield: **{avg_yield}**")
+                    st.info("🧾 Smart Contract Status: {}".format(status))
+                    st.info(f"Threshold: {threshold}, Predicted Yield: {avg_yield}")
 
                     if avg_yield >= threshold:
                         st.success("✅ Conditions met. Click below to trigger on-chain release.")
