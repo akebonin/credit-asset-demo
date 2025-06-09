@@ -38,7 +38,7 @@ try:
     contract = w3.eth.contract(address=Web3.to_checksum_address(CONTRACT_ADDRESS), abi=ABI)
 except Exception as e:
     contract = None
-    st.error(f"❌ Web3 initialization failed: {e}")
+    st.error("❌ Web3 initialization failed: " + str(e))
 
 wallet_address = st.text_input("Wallet Address", key="wallet_address")
 if st.checkbox("👁️ Show Wallet Address") and wallet_address:
@@ -118,7 +118,8 @@ with tab1:
                     else:
                         st.warning("Yield does not meet threshold. No on-chain release.")
                 except Exception as e:
-                    
+                    st.error("Status fetch failed: " + str(e))
+
 with tab2:
     st.header("🌍 Federated Farm Comparison")
     try:
@@ -137,7 +138,7 @@ with tab2:
         fig2 = px.bar(grouped, x="asset_type", y=["soil_moisture", "temperature", "yield_prediction", "credit_score"], barmode="group")
         st.plotly_chart(fig2, use_container_width=True)
     except Exception as e:
-        st.error(f"Failed to load or process federated data: {e}")
+        st.error("Failed to load or process federated data: " + str(e))
 
 st.markdown("---")
 st.caption("Prototype demo for G20 TechSprint 2025 | Built by Alis Grave Nil")
