@@ -71,7 +71,7 @@ with tab1:
 
         if mode == "Simulate":
             if avg_yield >= threshold:
-                    st.success("✅ Conditions met. Click below to trigger on-chain release.")
+                        st.success("✅ Conditions met. Click below to trigger on-chain release.")
                     st.markdown(f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})", unsafe_allow_html=True)
                     st.info("Threshold: " + str(threshold) + ", Predicted Yield: " + str(avg_yield))
 
