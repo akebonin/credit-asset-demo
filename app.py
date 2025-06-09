@@ -48,7 +48,7 @@ mode = st.radio("Select Mode:", ["Simulate", "MetaMask (On-chain)"])
 
 # === Data Setup ===
 data = pd.read_csv("cassava_farm_data.csv")
-threshold = 1500  # fixed as per request
+threshold = 1500  # fixed threshold
 
 # === Tab Layout ===
 tab1, tab2 = st.tabs(["📈 Farm Monitoring & Disbursement", "🌍 Federated Comparison"])
@@ -80,7 +80,7 @@ with tab1:
             if avg_yield >= threshold:
                 st.success("✅ Conditions met. Click below to trigger on-chain release.")
                 st.markdown(
-                    f'<a href="https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield}" target="_self">🌐 Open MetaMask Transaction Page</a>',
+                    f'<a href="https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield}" target="_top">🌐 Open MetaMask Transaction Page</a>',
                     unsafe_allow_html=True
                 )
             else:
