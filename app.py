@@ -70,9 +70,8 @@ with tab1:
         st.success("Consent recorded. Logic unlocked.")
 
         if mode == "Simulate":
-            threshold = 1500
             if avg_yield >= threshold:
-                        st.success("✅ Simulated: Yield exceeds threshold. Funds disbursed to CBDC wallet.")
+                st.success("✅ Simulated: Yield exceeds threshold. Funds disbursed to CBDC wallet.")
                 st.balloons()
             else:
                 st.warning("Simulated: Yield does not meet threshold. No disbursement.")
