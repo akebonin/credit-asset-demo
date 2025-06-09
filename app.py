@@ -86,7 +86,8 @@ with tab1:
                     st.info("Threshold: " + str(threshold) + ", Predicted Yield: " + str(avg_yield))
 
                     if avg_yield >= threshold:
-                    st.success("✅ Conditions met. Click below to trigger on-chain release.")
+    st.success("✅ Conditions met. Click below to trigger on-chain release.")
+    st.markdown(f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})", unsafe_allow_html=True)
                     st.markdown(f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})", unsafe_allow_html=True)
 
                         abi_snippet = [{
