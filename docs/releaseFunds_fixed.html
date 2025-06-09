@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Release Funds</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; }
+    #status { margin-top: 1em; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Release Funds</h2>
+  <p id="status">🔄 Waiting for MetaMask...</p>
+
+  <script>
+    async function main() {
+      const params = new URLSearchParams(window.location.search);
+      const yieldValue = parseInt(params.get("yield"));
+
+      const CONTRACT_ADDRESS = "0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6";
+      const ABI = [{
+        "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
+        "name": "releaseFunds",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }];
+
+      const status = document.getElementById("status");
+
+      if (typeof window.ethereum === 'undefined') {
+        status.textContent = "❌ Error: MetaMask not available";
+        return;
+      }
+
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        status.textContent = "🔗 Connected to MetaMask. Preparing transaction...";
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+
+        const tx = await contract.releaseFunds(yieldValue);
+        status.textContent = "✅ TX sent: " + tx.hash;
+      } catch (err) {
+        status.textContent = "❌ Error: " + err.message;
+      }
+    }
+
+    window.onload = main;
+  </script>
+</body>
+</html>
