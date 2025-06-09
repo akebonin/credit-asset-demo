@@ -79,10 +79,12 @@ with tab1:
         elif mode == "MetaMask (On-chain)":
             if avg_yield >= threshold:
                 st.success("✅ Conditions met. Click below to trigger on-chain release.")
-                st.markdown(
-                    f'<a href="https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield}" target="_top">🌐 Open MetaMask Transaction Page</a>',
-                    unsafe_allow_html=True
-                )
+                components.html(f"""
+                    <button onclick="window.location.href='https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield}'"
+                        style="padding: 10px 20px; font-size: 16px; background-color: #2081e2; color: white; border: none; border-radius: 5px;">
+                        🌐 Trigger MetaMask Transaction
+                    </button>
+                """, height=60)
             else:
                 st.warning("⚠️ Yield does not meet threshold. No on-chain release.")
 
