@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from web3 import Web3
-from streamlit_js_eval import streamlit_js_eval
-import json
+import streamlit.components.v1 as components
 
 # === CONFIG ===
 st.set_page_config(page_title="Asset-Based Credit Score", layout="wide")
@@ -86,44 +85,34 @@ with tab1:
 
                     if avg_yield >= threshold:
                         st.success("✅ Conditions met. Click below to trigger on-chain release.")
-                        abi_snippet = [{
-                            "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
-                            "name": "releaseFunds",
-                            "outputs": [],
-                            "stateMutability": "nonpayable",
-                            "type": "function"
-                        }]
-                        js_code = f"""
-                        (async () => {{
-                            try {{
-                                if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') throw new Error('MetaMask not found');
-                                if (typeof ethers === 'undefined') {{
-                                    await new Promise((resolve, reject) => {{
-                                        const script = document.createElement('script');
-                                        script.src = 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js';
-                                        script.onload = resolve;
-                                        script.onerror = reject;
-                                        document.head.appendChild(script);
-                                    }});
-                                }}
-                                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                                const signer = provider.getSigner();
-                                const abi = {json.dumps(abi_snippet)};
-                                const contract = new ethers.Contract('{CONTRACT_ADDRESS}', abi, signer);
-                                const tx = await contract.releaseFunds({avg_yield});
-                                return tx.hash;
-                            }} catch (e) {{
-                                return "JS Error: " + e.message;
-                            }}
-                        }})()
+
+                        html = f"""
+                        <script src='https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js'></script>
+                        <button onclick="runTX()" style="padding: 10px; background-color: #d62828; color: white; border: none; border-radius: 5px;">🚀 Send releaseFunds({avg_yield})</button>
+                        <p id="result" style="margin-top: 10px; font-family: monospace;"></p>
+                        <script>
+                        async function runTX() {{
+                          try {{
+                            if (typeof window.ethereum === 'undefined') throw new Error('MetaMask not available');
+                            const provider = new ethers.providers.Web3Provider(window.ethereum);
+                            const signer = provider.getSigner();
+                            const abi = [{
+                              "inputs": [{{"internalType": "uint256", "name": "actualYield", "type": "uint256"}}],
+                              "name": "releaseFunds",
+                              "outputs": [],
+                              "stateMutability": "nonpayable",
+                              "type": "function"
+                            }];
+                            const contract = new ethers.Contract('{CONTRACT_ADDRESS}', abi, signer);
+                            const tx = await contract.releaseFunds({avg_yield});
+                            document.getElementById("result").innerText = "✅ TX sent: " + tx.hash;
+                          }} catch(err) {{
+                            document.getElementById("result").innerText = "❌ " + err.message;
+                          }}
+                        }}
+                        </script>
                         """
-                        if st.button("🚀 Send releaseFunds transaction"):
-                            result = streamlit_js_eval(js_expressions=js_code, key="release_funds", debounce=0)
-                            if result:
-                                if str(result).startswith("0x"):
-                                    st.success(f"✅ TX sent: {result}")
-                                else:
-                                    st.error(f"❌ {result}")
+                        components.html(html, height=150)
                     else:
                         st.warning("Yield does not meet threshold. No on-chain release.")
                 except Exception as e:
