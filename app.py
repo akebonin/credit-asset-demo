@@ -72,7 +72,7 @@ with tab1:
         if mode == "Simulate":
             threshold = 1500
             if avg_yield >= threshold:
-                st.success("✅ Simulated: Yield exceeds threshold. Funds disbursed to CBDC wallet.")
+                        st.success("✅ Simulated: Yield exceeds threshold. Funds disbursed to CBDC wallet.")
                 st.balloons()
             else:
                 st.warning("Simulated: Yield does not meet threshold. No disbursement.")
@@ -87,7 +87,7 @@ with tab1:
 
                     if avg_yield >= threshold:
     st.success("✅ Conditions met. Click below to trigger on-chain release.")
-    st.markdown(f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})", unsafe_allow_html=True)
+                            st.markdown(f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})", unsafe_allow_html=True)
                     st.markdown(f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})", unsafe_allow_html=True)
 
                         abi_snippet = [{
