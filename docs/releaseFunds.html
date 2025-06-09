@@ -3,18 +3,28 @@
 <head>
   <title>Release Funds</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      text-align: center;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 1.1em;
+    }
+  </style>
 </head>
-<body style="font-family: sans-serif; padding: 2em; text-align: center;">
+<body>
   <h2>Release Funds</h2>
-  <p id="status">🔍 Checking MetaMask availability...</p>
+  <p id="status">🔍 Checking MetaMask...</p>
 
   <script>
-    async function main() {
-      const statusEl = document.getElementById("status");
+    window.addEventListener('load', async () => {
+      const statusEl = document.getElementById('status');
 
-      if (typeof window.ethereum === 'undefined') {
-        statusEl.textContent = "❌ MetaMask not available. Please open this page inside the MetaMask app.";
+      if (!window.ethereum) {
+        statusEl.textContent = "❌ MetaMask not available. Please open this inside the MetaMask mobile app browser.";
         return;
       }
 
@@ -22,7 +32,6 @@
         const params = new URLSearchParams(window.location.search);
         const yieldValue = parseInt(params.get("yield") || "0");
         const CONTRACT_ADDRESS = "0xfb3fc9218cb7c555b144f36390cde4c93aa8cbd6";
-
         const ABI = [{
           "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
           "name": "releaseFunds",
@@ -31,22 +40,27 @@
           "type": "function"
         }];
 
-        statusEl.textContent = "🔗 Connecting to MetaMask...";
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        await ethereum.request({ method: 'eth_requestAccounts' });
 
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+        const provider = new window.ethereum;
+        const web3 = new window.Web3(window.ethereum);
+        const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
+
+        const accounts = await web3.eth.getAccounts();
+        const sender = accounts[0];
 
         statusEl.textContent = "🚀 Sending transaction...";
-        const tx = await contract.releaseFunds(yieldValue);
-        statusEl.textContent = "✅ Transaction sent: " + tx.hash;
+
+        await contract.methods.releaseFunds(yieldValue).send({ from: sender });
+
+        statusEl.textContent = "✅ Transaction sent successfully!";
       } catch (err) {
         statusEl.textContent = "❌ Error: " + err.message;
       }
-    }
-
-    window.addEventListener('load', main);
+    });
   </script>
+
+  <!-- Fallback if Web3 not injected -->
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
 </body>
 </html>
