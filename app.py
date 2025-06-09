@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 from web3 import Web3
 import streamlit.components.v1 as components
-import json
 
 # === CONFIG ===
 st.set_page_config(page_title="Asset-Based Credit Score", layout="wide")
@@ -49,7 +48,7 @@ mode = st.radio("Select Mode:", ["Simulate", "MetaMask (On-chain)"])
 
 # === Data Setup ===
 data = pd.read_csv("cassava_farm_data.csv")
-threshold = 1500  # <-- fixed value as per user request
+threshold = 1500  # as specified
 
 # === Tab Layout ===
 tab1, tab2 = st.tabs(["📈 Farm Monitoring & Disbursement", "🌍 Federated Comparison"])
@@ -69,65 +68,23 @@ with tab1:
 
     if consent:
         st.success("Consent recorded. Logic unlocked.")
+        st.info(f"Threshold: {threshold}, Predicted Yield: {avg_yield}")
 
         if mode == "Simulate":
-            try:
-                st.info(f"Threshold: {threshold}, Predicted Yield: {avg_yield}")
+            if avg_yield >= threshold:
+                st.success("✅ Conditions met. Funds would be released in a real scenario.")
+            else:
+                st.warning("⚠️ Yield does not meet threshold. No funds released.")
 
-                if avg_yield >= threshold:
-                    st.success("✅ Conditions met. Click below to trigger on-chain release.")
-                    st.markdown(
-                        f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})",
-                        unsafe_allow_html=True,
-                    )
-
-                    abi_snippet = [{
-                        "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
-                        "name": "releaseFunds",
-                        "outputs": [],
-                        "stateMutability": "nonpayable",
-                        "type": "function"
-                    }]
-
-                    html_template = """
-                    <script>
-                    const loadEthers = async () => {
-                      if (typeof window.ethers === 'undefined') {
-                        const script = document.createElement('script');
-                        script.src = 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js';
-                        script.onload = runTX;
-                        document.head.appendChild(script);
-                      } else {
-                        runTX();
-                      }
-                    };
-                    </script>
-                    <button onclick="loadEthers()" style="padding: 10px; background-color: #d62828; color: white; border: none; border-radius: 5px;">🚀 Send releaseFunds(YIELD)</button>
-                    <p id="result" style="margin-top: 10px; font-family: monospace;"></p>
-                    <script>
-                    async function runTX() {
-                      try {
-                        if (typeof window.ethereum === 'undefined') throw new Error('MetaMask not available');
-                        const provider = new ethers.providers.Web3Provider(window.ethereum);
-                        const signer = provider.getSigner();
-                        const abi = ABI_JSON;
-                        const contract = new ethers.Contract('{CONTRACT_ADDRESS}', abi, signer);
-                        const tx = await contract.releaseFunds(YIELD);
-                        document.getElementById("result").innerText = "✅ TX sent: " + tx.hash;
-                      } catch(err) {
-                        document.getElementById("result").innerText = "❌ " + err.message;
-                      }
-                    }
-                    </script>
-                    """
-                    html = html_template.replace("ABI_JSON", json.dumps(abi_snippet)) \
-                                        .replace("YIELD", str(avg_yield)) \
-                                        .replace("{CONTRACT_ADDRESS}", CONTRACT_ADDRESS)
-                    components.html(html, height=180)
-                else:
-                    st.warning("⚠️ Yield does not meet threshold. No on-chain release.")
-            except Exception as e:
-                st.error("❌ Status fetch failed: " + str(e))
+        elif mode == "MetaMask (On-chain)":
+            if avg_yield >= threshold:
+                st.success("✅ Conditions met. Click below to trigger on-chain release.")
+                st.markdown(
+                    f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})",
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.warning("⚠️ Yield does not meet threshold. No on-chain release.")
 
 with tab2:
     st.header("🌍 Federated Farm Comparison")
