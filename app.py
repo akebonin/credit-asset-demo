@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 from web3 import Web3
 from streamlit_js_eval import streamlit_js_eval
+import json
 
 # === CONFIG ===
 st.set_page_config(page_title="Asset-Based Credit Score", layout="wide")
@@ -84,18 +85,19 @@ with tab1:
 
                     if avg_yield >= threshold:
                         st.success("✅ Conditions met. Click below to trigger on-chain release.")
+                        abi_snippet = [{
+                            "inputs": [{"internalType": "uint256", "name": "actualYield", "type": "uint256"}],
+                            "name": "releaseFunds",
+                            "outputs": [],
+                            "stateMutability": "nonpayable",
+                            "type": "function"
+                        }]
                         js_code = f"""
                         async () => {{
-                            if (typeof window.ethereum === 'undefined') throw new Error('MetaMask not found');
                             const provider = new ethers.providers.Web3Provider(window.ethereum);
                             const signer = provider.getSigner();
-                            const contract = new ethers.Contract('{CONTRACT_ADDRESS}', [{
-                                "inputs": [{{"internalType": "uint256", "name": "actualYield", "type": "uint256"}}],
-                                "name": "releaseFunds",
-                                "outputs": [],
-                                "stateMutability": "nonpayable",
-                                "type": "function"
-                            }], signer);
+                            const abi = {json.dumps(abi_snippet)};
+                            const contract = new ethers.Contract('{CONTRACT_ADDRESS}', abi, signer);
                             const tx = await contract.releaseFunds({avg_yield});
                             return tx.hash;
                         }}
