@@ -118,7 +118,7 @@ with tab1:
                     else:
                         st.warning("Yield does not meet threshold. No on-chain release.")
                 except Exception as e:
-                    st.error(f"Status fetch failed: {e}")
+                    st.error(f"Status fetch failed: {str(e).replace('{', '{{').replace('}', '}}')}")
 
 with tab2:
     st.header("🌍 Federated Farm Comparison")
