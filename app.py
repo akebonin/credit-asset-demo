@@ -79,8 +79,12 @@ with tab1:
         elif mode == "MetaMask (On-chain)":
             if avg_yield >= threshold:
                 st.success("✅ Conditions met. Click below to trigger on-chain release.")
-                st.markdown("""
-                    <a href="https://akebonin.github.io/credit-asset-demo/redirect.html" target="_self" style="
+
+                # ⬇ Update this URL with your actual PythonAnywhere username
+                redirect_url = f"https://debm.pythonanywhere.com/trigger?yield={avg_yield}"
+
+                st.markdown(f"""
+                    <a href="{redirect_url}" target="_self" style="
                         display: inline-block;
                         padding: 10px 20px;
                         background-color: #2081e2;
