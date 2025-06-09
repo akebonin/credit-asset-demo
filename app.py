@@ -95,6 +95,16 @@ with tab1:
                         }]
                         js_code = f"""
                         async () => {{
+                            if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') throw new Error('MetaMask not found');
+                            if (typeof ethers === 'undefined') {{
+                                await new Promise((resolve, reject) => {{
+                                    const script = document.createElement('script');
+                                    script.src = 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js';
+                                    script.onload = resolve;
+                                    script.onerror = reject;
+                                    document.head.appendChild(script);
+                                }});
+                            }}
                             const provider = new ethers.providers.Web3Provider(window.ethereum);
                             const signer = provider.getSigner();
                             const abi = {json.dumps(abi_snippet)};
@@ -104,9 +114,12 @@ with tab1:
                         }}
                         """
                         if st.button("🚀 Send releaseFunds transaction"):
-                            tx_hash = streamlit_js_eval(js_expressions=js_code, key="release_funds", debounce=0)
-                            if tx_hash:
-                                st.success(f"✅ TX sent: {tx_hash}")
+                            try:
+                                tx_hash = streamlit_js_eval(js_expressions=js_code, key="release_funds", debounce=0)
+                                if tx_hash:
+                                    st.success(f"✅ TX sent: {tx_hash}")
+                            except Exception as err:
+                                st.error(f"❌ TX failed: {err}")
                     else:
                         st.warning("Yield does not meet threshold. No on-chain release.")
                 except Exception as e:
