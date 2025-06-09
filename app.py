@@ -71,17 +71,8 @@ with tab1:
 
         if mode == "Simulate":
             if avg_yield >= threshold:
-                st.success("✅ Simulated: Yield exceeds threshold. Funds disbursed to CBDC wallet.")
-                st.balloons()
-            else:
-                st.warning("Simulated: Yield does not meet threshold. No disbursement.")
-
-        elif mode == "MetaMask (On-chain)":
-            if contract:
-                try:
-                    threshold = contract.functions.yieldThreshold().call()
-                    status = contract.functions.getStatus().call()
-                    st.markdown("🧾 Smart Contract Status: " + str(status))
+                    st.success("✅ Conditions met. Click below to trigger on-chain release.")
+                    st.markdown(f"[🌐 Open MetaMask Transaction Page](https://akebonin.github.io/credit-asset-demo/releaseFunds.html?yield={avg_yield})", unsafe_allow_html=True))
                     st.info("Threshold: " + str(threshold) + ", Predicted Yield: " + str(avg_yield))
 
                     if avg_yield >= threshold:
